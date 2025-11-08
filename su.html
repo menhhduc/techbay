@@ -1,0 +1,724 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TECHBAY — Embedded Catalogue (Importer)</title>
+<style>
+:root{
+  --ink:#160F45; --brand:#160F45; --accent:#FFC285; --muted:#6B7280; --line:#E5E7EB;
+  /* placeholders (SVG) – sẽ bị thay thế bằng url(data:...) khi bạn gắn ảnh */
+  --img5: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA2MDAgNDUwJz48cmVjdCB3aWR0aD0nNjAwJyBoZWlnaHQ9JzQ1MCcgZmlsbD0nI0ZGRjFFNCcvPjx0ZXh0IHg9JzMwMCcgeT0nMjI1JyB0ZXh0LWFuY2hvcj0nbWlkZGxlJyBmb250LXNpemU9JzE4JyBmaWxsPScjNkI3MjgwJz5DYXRhbG9ndWUgcGFnZSA1PC90ZXh0Pjwvc3ZnPg==");
+  --img10: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA2MDAgNDUwJz48cmVjdCB3aWR0aD0nNjAwJyBoZWlnaHQ9JzQ1MCcgZmlsbD0nI0ZGRjFFNCcvPjx0ZXh0IHg9JzMwMCcgeT0nMjI1JyB0ZXh0LWFuY2hvcj0nbWlkZGxlJyBmb250LXNpemU9JzE4JyBmaWxsPScjNkI3MjgwJz5DYXRhbG9ndWUgcGFnZSAxMDwvdGV4dD48L3N2Zz4=");
+  --img12: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA2MDAgNDUwJz48cmVjdCB3aWR0aD0nNjAwJyBoZWlnaHQ9JzQ1MCcgZmlsbD0nI0ZGRjFFNCcvPjx0ZXh0IHg9JzMwMCcgeT0nMjI1JyB0ZXh0LWFuY2hvcj0nbWlkZGxlJyBmb250LXNpemU9JzE4JyBmaWxsPScjNkI3MjgwJz5DYXRhbG9ndWUgcGFnZSAxMjwvdGV4dD48L3N2Zz4=");
+  --img13: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA2MDAgNDUwJz48cmVjdCB3aWR0aD0nNjAwJyBoZWlnaHQ9JzQ1MCcgZmlsbD0nI0ZGRjFFNCcvPjx0ZXh0IHg9JzMwMCcgeT0nMjI1JyB0ZXh0LWFuY2hvcj0nbWlkZGxlJyBmb250LXNpemU9JzE4JyBmaWxsPScjNkI3MjgwJz5DYXRhbG9ndWUgcGFnZSAxMzwvdGV4dD48L3N2Zz4=");
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:#fff;color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:1200px;margin:auto;padding:22px}
+h1,h2,h3{margin:0 0 10px} h1{font-size:32px} h2{font-size:24px} h3{font-size:18px}
+
+/* NAV */
+.header{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);z-index:10}
+.nav{display:flex;gap:24px;flex-wrap:wrap;align-items:center;justify-content:flex-start;padding:12px 22px}
+.nav a{text-decoration:none;color:var(--ink);padding:10px 14px;border-radius:12px;font-weight:800}
+.nav a:hover{background:#f6f7fb}
+.brand{display:flex;align-items:center;gap:12px;margin-right:auto}
+.brand img{height:48px;width:auto;display:block;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.brand strong{font-size:22px;letter-spacing:.5px}
+
+/* action bar */
+.actions{margin-left:auto;display:flex;gap:8px}
+.actions button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer}
+.actions button:hover{background:#f6f7fb}
+.badge{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:6px 10px;margin-left:6px;font-weight:800;background:#fff;color:#374151;font-size:12px}
+
+/* HERO */
+.hero{background:linear-gradient(180deg,#fff,#FFF4E6);border-bottom:1px solid var(--line)}
+.hero-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;align-items:center}
+.heroimg{width:100%;border:1px solid var(--line);border-radius:14px;aspect-ratio:4/3;background:#fff var(--img5) center/cover no-repeat}
+.meta{color:var(--muted);font-size:13px}
+
+/* GRID & CARD */
+.grid{display:grid;gap:16px} .col-4{grid-template-columns:repeat(4,1fr)} .col-3{grid-template-columns:repeat(3,1fr)}
+.card{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff}
+
+/* PRODUCT TILE using embedded images via CSS vars */
+.tile{display:block;width:100%;border:1px solid var(--line);border-radius:10px;background-color:#fff;background-repeat:no-repeat}
+
+/* Fix for images inside tiles */
+.tile img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    border-radius: 9px;
+    display: block;
+    transition: all 0.3s ease;
+    mix-blend-mode: multiply;
+    background-color: transparent;
+    cursor: pointer;
+}
+
+.tile img:hover {
+    transform: scale(1.05);
+    filter: brightness(0.8);
+}
+
+.image-popup {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgb(0, 0, 0);
+    backdrop-filter: blur(5px);
+}
+
+.popup-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 900px;  /* Wider for info panel */
+    height: 650px; /* Slightly taller */
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgb(0, 0, 0);
+    animation: popupSlideIn 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+}
+
+.popup-header h3 {
+    margin: 0;
+    color: var(--brand);
+    font-size: 22px;
+}
+
+.popup-close {
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: var(--muted);
+    padding: 0;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+}
+
+.popup-close:hover {
+    background: var(--line);
+    color: var(--ink);
+}
+
+.popup-body {
+    display: flex;
+    gap: 30px;
+    flex: 1;
+    min-height: 0;
+}
+
+.popup-left {
+    flex: 0 0 400px; /* Fixed width for image side */
+    display: flex;
+    flex-direction: column;
+}
+
+.popup-right {
+    flex: 1; /* Take remaining space */
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.popup-image-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 300px; /* Fixed height for image */
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+    margin-bottom: 15px;
+}
+
+.popup-image {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 6px;
+    transition: opacity 0.3s ease;
+}
+
+.nav-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(22, 15, 69, 0.9);
+    color: white;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+.nav-button:hover {
+    background: var(--brand);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.nav-button:disabled {
+    background: rgba(0, 0, 0, 0.3);
+    cursor: not-allowed;
+    transform: translateY(-50%) scale(1);
+}
+
+.nav-prev {
+    left: 10px;
+}
+
+.nav-next {
+    right: 10px;
+}
+
+.image-thumbnails {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-height: 80px;
+    overflow-y: auto;
+    padding: 5px 0;
+}
+
+.thumbnail {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    opacity: 0.7;
+    flex-shrink: 0;
+}
+
+.thumbnail:hover {
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+.thumbnail.active {
+    border-color: var(--brand);
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+/* Info panel styles */
+.info-section {
+    margin-bottom: 20px;
+}
+
+.info-section h4 {
+    color: var(--brand);
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 5px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.info-label {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-value {
+    color: var(--ink);
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.stat-card {
+    background: #f9fafb;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--brand);
+    margin-bottom: 2px;
+}
+
+.stat-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.details-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 10px;
+}
+
+.details-table th,
+.details-table td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--line);
+}
+
+.details-table th {
+    background: #f9fafb;
+    font-weight: 600;
+    color: var(--brand);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.details-table td {
+    color: var(--ink);
+}
+
+.details-table tr:hover {
+    background: #f9fafb;
+}
+
+.image-counter {
+    color: var(--brand);
+    font-weight: 600;
+    font-size: 12px;
+    text-align: center;
+    margin-top: 10px;
+}
+
+/* Add these to your existing CSS */
+.features-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 13px;
+}
+
+.features-list li {
+    position: relative;
+    padding-left: 20px;
+    margin-bottom: 10px;
+    line-height: 1.4;
+    color: var(--ink);
+}
+
+.features-list li:before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: var(--brand);
+    font-size: 14px;
+}
+
+.specials-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 13px;
+}
+
+.specials-list li {
+    position: relative;
+    padding-left: 20px;
+    margin-bottom: 10px;
+    line-height: 1.4;
+    color: var(--ink);
+}
+
+.specials-list li:before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: var(--brand);
+    font-size: 14px;
+}
+
+.compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-top: 15px;
+}
+
+.compare-table th,
+.compare-table td {
+    border: 1px solid var(--line);
+    padding: 6px 8px;
+    text-align: middle;
+}
+
+.compare-table th {
+    background: #f9fafb;
+    font-weight: 600;
+    color: var(--brand);
+    white-space: nowrap;
+}
+
+.compare-table tr:nth-child(even) {
+    background: #f9fafb;
+}
+
+#solutions .card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 50px;
+}
+
+#solutions .card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    background: #f6f7fb;
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .popup-content {
+        width: 95vw;
+        height: 90vh;
+    }
+
+    .popup-body {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .popup-left {
+        flex: none;
+    }
+
+    .popup-image-container {
+        height: 250px;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .popup-content {
+        padding: 15px;
+    }
+
+    .popup-image-container {
+        height: 200px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .details-table {
+        font-size: 12px;
+    }
+
+    .details-table th,
+    .details-table td {
+        padding: 6px 8px;
+    }
+}
+
+/* ensure navy info band visible */
+.tile.spr5, .tile.spr12, .tile.spr13{ aspect-ratio: 1 / 1.18; background-size: 210% 210%; }
+.spr5.pos-tl, .spr5.pos-tr{ background-position-y: 12%; }
+/* minibar crop */
+.tile.spr10.top{ aspect-ratio: 4 / 3; background-size: 200% 180%; }
+.tile.spr10.bot{ aspect-ratio: 4 / 3; background-size: 100% 200%;
+/* bind variables */
+.spr5 { background-image: var(--img5); }
+.spr10{ background-image: var(--img10); }
+.spr12{ background-image: var(--img12); }
+.spr13{ background-image: var(--img13); }
+
+/* crop positions */
+.pos-tl{background-position:0% 0%} .pos-tr{background-position:100% 0%}
+.pos-bl{background-position:0% 100%} .pos-br{background-position:100% 100%}
+.pos-top-l{background-position:0% 0%} .pos-top-r{background-position:100% 0%} .pos-bot{background-position:50% 100%}
+/* FOOTER */
+.footer{border-top:1px solid var(--line);padding:18px 0;color:var(--muted);font-size:14px}
+
+/* Responsive */
+@media (max-width:900px){ .hero-grid{grid-template-columns:1fr} .col-4{grid-template-columns:repeat(2,1fr)} .col-3{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:560px){ .col-4,.col-3{grid-template-columns:1fr} h1{font-size:26px} .brand strong{display:none}}}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="nav">
+    <div class="brand">
+      <img id="logo" alt="TECHBAY logo"
+           src="data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PScwIDAgMjQgMjQnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zyc+PGNpcmNsZSByPTEwIGN4PTEyIGN5PTEyIHN0cm9rZT0nI0ZGQzI4NScgc3Ryb2tlLXdpZHRoPTInIGZpbGw9J25vbmUnLz48cGF0aCBkPSdNOCAxM2g4TTEyIDl2Nicgc3Ryb2tlPScjRkZDMjg1JyBzdHJva2Utd2lkdGg9JzInIGZpbGw9J25vbmUnIHN0cm9rZS1saW5lY2FwPSdyb3VuZCcvPjwvc3ZnPg==" />
+      <strong>TECHBAY</strong>
+    </div>
+    <a href="#about">Về chúng tôi</a>
+    <a href="#products">Sản phẩm</a>
+    <a href="#solutions">Giải pháp</a>
+    <a href="#contact">Liên hệ</a>
+
+    <div class="actions">
+      <button onclick="pickFiles()">Gắn ảnh catalogue</button>
+      <button onclick="downloadOneFile()">Tải xuống bản 1-file</button>
+      <span id="status" class="badge">0/5 ảnh</span>
+      <input id="fileInput" type="file" accept="image/*" multiple hidden>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <h1>Khóa, Minibar & Điều khiển phòng</h1>
+    </div>
+    <div class="heroimg" role="img" aria-label="Catalogue preview">
+      <img src="webimages/hotel-room.jpg" alt="LV710" style="width: 456px; height: 341px;">
+    </div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="wrap">
+    <h2>Về TECHBAY</h2>
+    <p class="meta">Giải pháp khóa, minibar và điều khiển phòng cho khách sạn & dân dụng — tối ưu vận hành và trải nghiệm.</p>
+  </div>
+</section>
+
+<section id="products">
+  <div class="wrap">
+    <h2>Sản phẩm</h2>
+
+      <h3 style="margin-top:10px">Khóa khách sạn</h3>
+      <div class="grid col-4">
+          <div class="card"><div class="tile spr5 pos-tl" aria-label="LEVEL LV710">
+              <img src="webimages/lv710/lv710.png" alt="LV710">
+          </div><div class="meta">LEVEL LV710</div></div>
+          <div class="card"><div class="tile spr5 pos-tr" aria-label="MF1 RF-1660">
+              <img src="webimages/rf1660/rf1660.png" alt="RF-1660">
+          </div><div class="meta">MF1 RF-1660</div></div>
+          <div class="card"><div class="tile spr5 pos-bl" aria-label="RF-1620">
+              <img src="webimages/rf1620/rf1620.png" alt="RF-1620">
+          </div><div class="meta">RF-1620</div></div>
+          <div class="card"><div class="tile spr5 pos-br" aria-label="RF-1320">
+              <img src="webimages/rf1320/rf1320.png" alt="RF-1320">
+          </div><div class="meta">RF-1320</div></div>
+      </div>
+
+      <h3 style="margin-top:16px">Khóa dân dụng</h3>
+      <div class="grid col-4">
+          <div class="card"><div class="tile spr13 pos-tl" aria-label="MDT-330"><img src="webimages/mdt330/mdt330.png" alt="MDT-330"></div><div class="meta">MDT-330</div></div>
+          <div class="card"><div class="tile spr13 pos-tr" aria-label="MD-290"><img src="webimages/md290/md290.png" alt="MD-290"></div><div class="meta">MD-290</div></div>
+          <div class="card"><div class="tile spr12 pos-bl" aria-label="MDT-1320"><img src="webimages/mdt1320/mdt1320.jpg" alt="MDT-1320"></div><div class="meta">MDT-1320</div></div>
+          <div class="card"><div class="tile spr13 pos-br" aria-label="TDT-1550"><img src="webimages/tdt1550/tdt1550.png" alt="TDT-1550"></div><div class="meta">TDT-1550</div></div>
+      </div>
+      <div class="grid col-4">
+          <div class="card"><div class="tile spr13 pos-tl" aria-label="MDT-330"><img src="webimages/mdtm12/mdtm12-silver.png" alt="MDT-M12"></div><div class="meta">MDT-M12</div></div>
+          <div class="card"><div class="tile spr13 pos-tr" aria-label="MD-290"><img src="webimages/tdt1330/tdt1330-silver.png" alt="TDT-1330"></div><div class="meta">TDT-1330</div></div>
+          <div class="card"><div class="tile spr12 pos-bl" aria-label="MDT-1320"><img src="webimages/tdt1380/tdt1380-silver.png" alt="TDT-1380"></div><div class="meta">TDT-1380</div></div>
+          <div class="card"><div class="tile spr13 pos-br" aria-label="TDT-1550"><img src="webimages/mdt1380/mdt1380-silver.png" alt="MDT-1380"></div><div class="meta">MDT-1380</div></div>
+      </div>
+
+      <h3 style="margin-top:16px">Minibar</h3>
+      <div class="grid col-3">
+          <div class="card"><div class="tile spr10 top pos-top-l" aria-label="DW30CE"><img src="webimages/dw30ce/dw30ce.jpg" alt="DW30CE"></div><div class="meta">DELLCOOL DW30CE</div></div>
+          <div class="card"><div class="tile spr10 top pos-top-r" aria-label="DW30CTE"><img src="webimages/dw30cte/dw30cte.png" alt="DW30CTE"></div><div class="meta">DELLCOOL DW30CTE</div></div>
+          <div class="card"><div class="tile spr10 bot pos-bot" aria-label="DW30RTE"><img src="webimages/dw30rte/dw30rte.png" alt="DW3RTE"></div><div class="meta">DELLCOOL DW30RTE</div></div>
+      </div>
+  </div>
+</section>
+
+<section id="solutions">
+  <div class="wrap">
+    <h2>Giải pháp</h2>
+    <div class="grid col-3">
+      <div class="card"><strong>Hệ thống khách sạn thông minh</strong><div class="meta">Khóa thẻ RFID/MIFARE, phần mềm & phụ kiện đồng bộ.</div></div>
+      <div class="card"><strong>Kiểm soát cửa & thang</strong><div class="meta">TCP/IP, log 1000+ sự kiện, mở rộng nhiều tầng.</div></div>
+      <div class="card"><strong>Phòng khách thông minh</strong><div class="meta">Bảng điều khiển, kịch bản chiếu sáng/tiện nghi.</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="wrap">
+    <h2>Liên hệ</h2>
+    <p class="meta">sales@techbay.example • 09xx xxx xxx</p>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="wrap">© TECHBAY.</div>
+</footer>
+
+<!-- Image Popup -->
+<div id="imagePopup" class="image-popup">
+    <div class="popup-content">
+        <div class="popup-header">
+            <h3 id="popupTitle">Product Details</h3>
+            <button class="popup-close" onclick="closeImagePopup()">&times;</button>
+        </div>
+
+        <div class="popup-body">
+            <!-- Left side - Images -->
+            <div class="popup-left">
+                <div class="popup-image-container">
+                    <button class="nav-button nav-prev" id="prevBtn" onclick="previousImage()">‹</button>
+                    <img id="popupImage" class="popup-image" src="" alt="">
+                    <button class="nav-button nav-next" id="nextBtn" onclick="nextImage()">›</button>
+                </div>
+
+                <div class="image-counter" id="imageCounter">1 / 1</div>
+
+                <div class="image-thumbnails" id="thumbnailContainer"></div>
+            </div>
+
+            <!-- Right side - Information -->
+            <div class="popup-right">
+                <!-- Basic Info -->
+                <div class="info-section">
+                    <h4>Thông tin chung</h4>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Product Name</div>
+                            <div class="info-value" id="productName">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Chất liệu</div>
+                            <div class="info-value" id="productCategory">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Tùy chọn hoàn thiện</div>
+                            <div class="info-value" id="productCode">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Thân khóa tương thích</div>
+                            <div class="info-value" id="launchDate">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Phù hợp cho loại cửa</div>
+                            <div class="info-value" id="productChar">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Phương thức mở</div>
+                            <div class="info-value" id="productRequire">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Technical Details -->
+                <div class="info-section">
+                    <h4>Thông số kĩ thuật</h4>
+                    <table class="details-table">
+                        <thead>
+                        <tr>
+                            <th>Specification</th>
+                            <th>Details</th>
+                        </tr>
+                        </thead>
+                        <tbody id="specsTableBody">
+                        <tr>
+                            <td>Power Supply</td>
+                            <td>4 x AA Batteries</td>
+                        </tr>
+                        <tr>
+                            <td>Operating Temp</td>
+                            <td>-20°C to +70°C</td>
+                        </tr>
+                        <tr>
+                            <td>Material</td>
+                            <td>Stainless Steel</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Solutions Popup -->
+<div id="solutionsPopup" class="image-popup">
+    <div class="popup-content" style="width: 600px; height: auto; min-height: 300px; max-height: 80vh;">
+        <div class="popup-header">
+            <h3 id="solutionTitle">Solution Details</h3>
+            <button class="popup-close" onclick="closeSolutionsPopup()">&times;</button>
+        </div>
+        <div class="popup-body" style="flex-direction: column; padding: 20px;">
+            <div id="solutionContent"></div>
+        </div>
+    </div>
+</div>
+
+<script src="webfunction.js"></script>
+</body>
+</html>
